@@ -7,4 +7,7 @@ else:
     load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
-sync_folder = '/home/grayniks/Изображения/Снимки экрана'
+SYNC_FOLDER = os.getenv("SYNC_FOLDER")
+DISK_PATH = os.getenv("DISK_PATH")
+PERIOD = os.getenv("PERIOD")
+LOG_FILE_PATH = os.getenv("LOG_FILE_PATH")
