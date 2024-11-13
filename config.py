@@ -8,6 +8,6 @@ else:
 
 TOKEN = os.getenv("TOKEN")
 SYNC_FOLDER = os.getenv("SYNC_FOLDER")
-DISK_PATH = os.getenv("DISK_PATH")
+YANDEX_DISK_PATH = os.getenv("YANDEX_DISK_PATH")
 PERIOD = os.getenv("PERIOD")
 LOG_FILE_PATH = os.getenv("LOG_FILE_PATH")
