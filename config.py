@@ -6,8 +6,8 @@ if not find_dotenv():
 else:
     load_dotenv()
 
-TOKEN = os.getenv("TOKEN")
+YANDEX_TOKEN = os.getenv("YANDEX_TOKEN")
 SYNC_FOLDER = os.getenv("SYNC_FOLDER")
 YANDEX_DISK_PATH = os.getenv("YANDEX_DISK_PATH")
 PERIOD = os.getenv("PERIOD")
-LOG_FILE_PATH = os.getenv("LOG_FILE_PATH")
+YA_LOG_FILE_PATH = os.getenv("YA_LOG_FILE_PATH")
