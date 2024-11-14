@@ -1,5 +1,5 @@
-import requests
 from loguru import logger
+import requests
 
 from config import YANDEX_DISK_PATH
 
@@ -12,10 +12,37 @@ def headers(token):
     }
     return head
 
+
+def resp_filter(resp):
+    data_list = []
+    for file_data in resp['_embedded']['items']:
+        data_dict = {
+            'name': file_data['name'],
+            'modified': file_data['modified']
+        }
+        data_list.append(data_dict)
+
+    return data_list
+
+
+@logger.catch
+def scan_cloud(token):
+    response = requests.get(f'https://cloud-api.yandex.net/v1/disk/resources?path={YANDEX_DISK_PATH}', headers=headers(token))
+    if response.status_code == 200:
+        logger.info('Папка в облачном хранилище успешно отсканирована. Данные получены.')
+        response = response.json()
+        return resp_filter(response)
+
+    elif response.status_code == 401:
+        logger.error('Возможно, у Вас неправильный токен доступа. Авторизуйтесь для сканирования')
+    else:
+        logger.error(f'При попытке отсканировать папку в облачном хранилище сервер прислал ответ с HTTP-кодом: {response.status_code}.')
+
+
 @logger.catch
 def upload_files(file_list, token, sync_folder):
     for file_name in file_list:
-        response = requests.get(f'{YANDEX_DISK_PATH}{file_name}&fields=href&overwrite=true',
+        response = requests.get(f'https://cloud-api.yandex.net/v1/disk/resources/upload?path={YANDEX_DISK_PATH}{file_name}&fields=href&overwrite=true',
                                 headers=headers(token))
         if response.status_code == 200:
             response = response.json()
@@ -32,10 +59,11 @@ def upload_files(file_list, token, sync_folder):
             logger.error(f'При попытке получить ссылку для загрузки файла {file_name} сервер прислал ответ с HTTP-кодом: {response.status_code}.')
     return
 
+
 @logger.catch
 def delete_files(file_list, token):
     for file_name in file_list:
-        response = requests.delete(f'{YANDEX_DISK_PATH}{file_name}', headers=headers(token))
+        response = requests.delete(f'https://cloud-api.yandex.net/v1/disk/resources?path={YANDEX_DISK_PATH}{file_name}', headers=headers(token))
         if response.status_code == 204:
             logger.info(f'Файл {file_name} в облачном хранилище успешно удалён.')
         elif response.status_code == 401:
