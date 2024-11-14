@@ -18,7 +18,7 @@ def resp_filter(resp):
     for file_data in resp['_embedded']['items']:
         data_dict = {
             'name': file_data['name'],
-            'modified': file_data['modified']
+            'md5': file_data['md5']
         }
         data_list.append(data_dict)
 
@@ -42,7 +42,7 @@ def scan_cloud(token):
 @logger.catch
 def upload_files(file_list, token, sync_folder):
     for file_name in file_list:
-        response = requests.get(f'https://cloud-api.yandex.net/v1/disk/resources/upload?path={YANDEX_DISK_PATH}{file_name}&fields=href&overwrite=true',
+        response = requests.get(f'https://cloud-api.yandex.net/v1/disk/resources/upload?path={YANDEX_DISK_PATH}%2F{file_name}&fields=href&overwrite=true',
                                 headers=headers(token))
         if response.status_code == 200:
             response = response.json()
@@ -50,7 +50,7 @@ def upload_files(file_list, token, sync_folder):
                 try:
                     requests.put(response['href'], files={'file': f})
                 except Exception as e:
-                    logger.error(f'При попытке отправить файл {file_name} возникло исключение:\n{e}.')
+                    logger.error(f'При попытке отправить файл {file_name} возникло исключение:\n{e}')
                 else:
                     logger.info(f'Файл {file_name} успешно отправлен.')
         elif response.status_code == 401:
@@ -63,7 +63,7 @@ def upload_files(file_list, token, sync_folder):
 @logger.catch
 def delete_files(file_list, token):
     for file_name in file_list:
-        response = requests.delete(f'https://cloud-api.yandex.net/v1/disk/resources?path={YANDEX_DISK_PATH}{file_name}', headers=headers(token))
+        response = requests.delete(f'https://cloud-api.yandex.net/v1/disk/resources?path={YANDEX_DISK_PATH}%2F{file_name}', headers=headers(token))
         if response.status_code == 204:
             logger.info(f'Файл {file_name} в облачном хранилище успешно удалён.')
         elif response.status_code == 401:
