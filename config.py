@@ -7,7 +7,7 @@ else:
     load_dotenv()
 
 YANDEX_TOKEN = os.getenv("YANDEX_TOKEN")
-SYNC_FOLDER = os.getenv("SYNC_FOLDER")
+YANDEX_SYNC_FOLDER = os.getenv("YANDEX_SYNC_FOLDER")
 YANDEX_DISK_PATH = os.getenv("YANDEX_DISK_PATH")
-PERIOD = os.getenv("PERIOD")
+YANDEX_PERIOD = os.getenv("YANDEX_PERIOD")
 YA_LOG_FILE_PATH = os.getenv("YA_LOG_FILE_PATH")

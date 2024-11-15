@@ -3,7 +3,7 @@ from loguru import logger
 import os
 import hashlib
 
-from config import SYNC_FOLDER
+from config import YANDEX_SYNC_FOLDER
 
 
 #os.chdir(SYNC_FOLDER)
@@ -14,6 +14,7 @@ def calculate_md5(filepath):
 
     # Открываем файл в бинарном режиме
     with open(filepath, "rb") as file:
+
         # Читаем файл по частям для экономии памяти
         for chunk in iter(lambda: file.read(4096), b""):
             md5_hash.update(chunk)
