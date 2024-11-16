@@ -1,12 +1,6 @@
-from loguru import logger
-
 import os
 import hashlib
 
-from config import YANDEX_SYNC_FOLDER
-
-
-#os.chdir(SYNC_FOLDER)
 
 def calculate_md5(filepath):
     # Создаем объект MD5
@@ -23,15 +17,5 @@ def calculate_md5(filepath):
     return md5_hash.hexdigest()
 
 
-@logger.catch
 def scan():
-    data_list = []
-    for file_name in os.listdir():
-        data_dict = {}
-        data_dict['name'] = file_name
-        data_dict['md5'] = calculate_md5(file_name)
-        data_list.append(data_dict)
-
-    return data_list
-
-print(scan())
+    return {file_name: calculate_md5(file_name) for file_name in os.listdir()}
