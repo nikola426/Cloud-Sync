@@ -14,18 +14,9 @@ def headers(token):
 
 
 def resp_filter(resp):
-    data_list = []
-    for file_data in resp['_embedded']['items']:
-        data_dict = {
-            'name': file_data['name'],
-            'md5': file_data['md5']
-        }
-        data_list.append(data_dict)
-
-    return data_list
+    return {file_data['name']: file_data['md5'] for file_data in resp['_embedded']['items']}
 
 
-@logger.catch
 def scan_cloud(token):
     response = requests.get(f'https://cloud-api.yandex.net/v1/disk/resources?path={YANDEX_DISK_PATH}', headers=headers(token))
     if response.status_code == 200:
@@ -39,7 +30,6 @@ def scan_cloud(token):
         logger.error(f'При попытке отсканировать папку в облачном хранилище сервер прислал ответ с HTTP-кодом: {response.status_code}.')
 
 
-@logger.catch
 def upload_files(file_name, token, sync_folder):
     response = requests.get(f'https://cloud-api.yandex.net/v1/disk/resources/upload?path={YANDEX_DISK_PATH}%2F{file_name}&fields=href&overwrite=true',
                             headers=headers(token))
@@ -56,10 +46,8 @@ def upload_files(file_name, token, sync_folder):
         logger.error(f'Возможно, у Вас неправильный токен доступа. Авторизуйтесь для отправки файла {file_name}.')
     else:
         logger.error(f'При попытке получить ссылку для загрузки файла {file_name} сервер прислал ответ с HTTP-кодом: {response.status_code}.')
-    return
 
 
-@logger.catch
 def delete_files(file_name, token):
     response = requests.delete(f'https://cloud-api.yandex.net/v1/disk/resources?path={YANDEX_DISK_PATH}%2F{file_name}', headers=headers(token))
     if response.status_code == 204:
@@ -68,4 +56,3 @@ def delete_files(file_name, token):
         logger.error(f'Возможно, у Вас неправильный токен доступа. Авторизуйтесь для удаления файла {file_name}.')
     else:
         logger.error(f'При попытке удалить файл {file_name} сервер прислал ответ с HTTP-кодом: {response.status_code}.')
-    return
