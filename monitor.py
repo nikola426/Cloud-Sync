@@ -1,3 +1,5 @@
+from loguru import logger
+
 import os
 import hashlib
 
@@ -18,4 +20,10 @@ def calculate_md5(filepath):
 
 
 def scan():
-    return {file_name: calculate_md5(file_name) for file_name in os.listdir()}
+    try:
+        files_dict = {file_name: calculate_md5(file_name) for file_name in os.listdir()}
+    except Exception as e:
+        logger.error(f'При попытке отсканировать локальную папку возникло исключение: {e}')
+    else:
+        logger.info('Локальная папка успешно отсканирована.')
+        return files_dict
