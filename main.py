@@ -39,7 +39,9 @@ def data_preparation(sync_folder, period, log_file_path, interface):
 @logger.catch
 def main(module):
     if module == 'Yandex Disk':
-        infinite(*data_preparation(config.YANDEX_SYNC_FOLDER, config.YANDEX_PERIOD,
-                                   config.YA_LOG_FILE_PATH, YandexSyncInterface))
+        infinite(*data_preparation(config.YANDEX_SYNC_FOLDER,
+                                   config.YANDEX_PERIOD,
+                                   config.YA_LOG_FILE_PATH,
+                                   YandexSyncInterface))
 
 main('Yandex Disk')

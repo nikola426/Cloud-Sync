@@ -1,6 +1,9 @@
 from loguru import logger
 import requests
 
+import os
+import json
+
 from config import YANDEX_DISK_PATH
 
 
@@ -14,45 +17,81 @@ def headers(token):
 
 
 def resp_filter(resp):
-    return {file_data['name']: file_data['md5'] for file_data in resp['_embedded']['items']}
+    try:
+        cloud_files_data = {file_data['name']: file_data['md5'] for file_data in resp['_embedded']['items']}
+    except Exception as e:
+        logger.error(f'При попытке извлечь данные из ответа сервера возникло исключение: {e}')
+    else:
+        return cloud_files_data
 
 
 def scan_cloud(token):
-    response = requests.get(f'https://cloud-api.yandex.net/v1/disk/resources?path={YANDEX_DISK_PATH}', headers=headers(token))
-    if response.status_code == 200:
-        logger.info('Папка в облачном хранилище успешно отсканирована. Данные получены.')
-        response = response.json()
-        return resp_filter(response)
-
-    elif response.status_code == 401:
-        logger.error('Возможно, у Вас неправильный токен доступа. Авторизуйтесь для сканирования')
+    try:
+        response = requests.get(f'https://cloud-api.yandex.net/v1/disk/resources?path={YANDEX_DISK_PATH}', headers=headers(token))
+        deserial_response = response.json()
+        response.raise_for_status()
+    except requests.exceptions.HTTPError:
+        logger.error(f'При попытке отсканировать папку в облачном хранилище сервер прислал ответ:\n'
+                     f'{json.dumps(deserial_response, indent=4, ensure_ascii=False)}')
+    except requests.exceptions.RequestException as e:
+        logger.error(f'При попытке отсканировать папку в облачном хранилище произошла ошибка: {e}')
+    except requests.exceptions.JSONDecodeError as e:
+        logger.error(f'После сканирования папки в облачном хранилище возникла ошибка при декодировании полученного JSON: {e}')
+    except Exception as e:
+        logger.error(f'При попытке обработать ответ от сервера возникло исключение: {e}')
     else:
-        logger.error(f'При попытке отсканировать папку в облачном хранилище сервер прислал ответ с HTTP-кодом: {response.status_code}.')
+        logger.info('Папка в облачном хранилище успешно отсканирована.')
+        return resp_filter(deserial_response)
 
 
-def upload_files(file_name, token, sync_folder):
-    response = requests.get(f'https://cloud-api.yandex.net/v1/disk/resources/upload?path={YANDEX_DISK_PATH}%2F{file_name}&fields=href&overwrite=true',
-                            headers=headers(token))
-    if response.status_code == 200:
-        response = response.json()
-        with open('/'.join((sync_folder, file_name)), 'rb') as f:
-            try:
-                requests.put(response['href'], files={'file': f})
-            except Exception as e:
-                logger.error(f'При попытке отправить файл {file_name} возникло исключение:\n{e}')
-            else:
-                logger.info(f'Файл {file_name} успешно отправлен.')
-    elif response.status_code == 401:
-        logger.error(f'Возможно, у Вас неправильный токен доступа. Авторизуйтесь для отправки файла {file_name}.')
+def get_upload_link(file_name, token):
+    try:
+        response = requests.get(f'https://cloud-api.yandex.net/v1/disk/resources/upload?path={YANDEX_DISK_PATH}%2F{file_name}&fields=href&overwrite=true',
+                                    headers=headers(token))
+        deserial_response = response.json()
+        response.raise_for_status()
+    except requests.exceptions.HTTPError:
+        logger.error(f'При попытке получить ссылку на загрузку файла {file_name} сервер прислал ответ:\n'
+                     f'{json.dumps(deserial_response, indent=4, ensure_ascii=False)}')
+    except requests.exceptions.RequestException as e:
+        logger.error(f'При попытке получить ссылку на загрузку файла {file_name} произошла ошибка: {e}')
+    except requests.exceptions.JSONDecodeError as e:
+        logger.error(f'После получения ссылки на загрузку файла {file_name} возникла ошибка при декодировании JSON: {e}')
+    except Exception as e:
+        logger.error(f'При попытке получить ссылку на загрузку файла {file_name} возникло исключение: {e}')
     else:
-        logger.error(f'При попытке получить ссылку для загрузки файла {file_name} сервер прислал ответ с HTTP-кодом: {response.status_code}.')
+        logger.info(f'Ссылка на загрузку файла {file_name} успешно получена.')
+        return deserial_response['href']
+
+
+def upload_file(sync_folder, file_name, upload_link):
+    with open(os.path.join(sync_folder, file_name), 'rb') as f:
+        try:
+            response = requests.put(upload_link, files={'file': f})
+            response.raise_for_status()
+        except requests.exceptions.HTTPError:
+            logger.error(f'При попытке отправить файл {file_name} сервер прислал ответ:\n'
+                         f'{json.dumps(response.json(), indent=4, ensure_ascii=False)}')
+        except requests.exceptions.RequestException as e:
+            logger.error(f'При попытке отправить файл {file_name} произошла ошибка: {e}')
+        except Exception as e:
+            logger.error(f'При попытке отправить файл {file_name} возникло исключение: {e}')
+        else:
+            logger.info(f'Файл {file_name} успешно отправлен.')
 
 
 def delete_files(file_name, token):
-    response = requests.delete(f'https://cloud-api.yandex.net/v1/disk/resources?path={YANDEX_DISK_PATH}%2F{file_name}', headers=headers(token))
-    if response.status_code == 204:
-        logger.info(f'Файл {file_name} в облачном хранилище успешно удалён.')
-    elif response.status_code == 401:
-        logger.error(f'Возможно, у Вас неправильный токен доступа. Авторизуйтесь для удаления файла {file_name}.')
+    try:
+        response = requests.delete(f'https://cloud-api.yandex.net/v1/disk/resources?path={YANDEX_DISK_PATH}%2F{file_name}',
+                                        headers=headers(token))
+        response.raise_for_status()
+    except requests.exceptions.HTTPError:
+        logger.error(f'При попытке удалить файл {file_name} сервер прислал ответ:\n'
+                     f'{json.dumps(response.json(), indent=4, ensure_ascii=False)}')
+    except requests.exceptions.RequestException as e:
+        logger.error(f'При попытке удалить файл {file_name} произошла ошибка: {e}')
+    except Exception as e:
+        logger.error(f'При попытке отправить файл {file_name} возникло исключение: {e}')
     else:
-        logger.error(f'При попытке удалить файл {file_name} сервер прислал ответ с HTTP-кодом: {response.status_code}.')
+        logger.info(f'Файл {file_name} в облачном хранилище успешно удалён.')
+

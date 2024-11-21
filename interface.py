@@ -11,10 +11,11 @@ class YandexSyncInterface:
         return yandex_api.scan_cloud(self.__token)
 
     def load(self, file_name):
-        return yandex_api.upload_files(file_name, self.__token, self.__sync_folder)
+        upload_url = yandex_api.get_upload_link(file_name, self.__token)
+        return yandex_api.upload_file(self.__sync_folder, file_name, upload_url)
 
     def reload(self, file_name):
-        return yandex_api.upload_files(file_name, self.__token, self.__sync_folder)
+        return self.load(file_name)
 
     def delete(self, file_name):
         return yandex_api.delete_files(file_name, self.__token)
