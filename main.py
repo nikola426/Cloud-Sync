@@ -1,13 +1,14 @@
 from loguru import logger
 
 from time import sleep
+from typing import Dict, Union, Type, Tuple
 
-from interface import YandexSyncInterface
+from interfaces import YandexSyncInterface
 import monitor
 import config
 
 
-def revise(local_dict, cloud_dict, inter_inst):
+def revise(local_dict: Dict[str: str], cloud_dict: Dict[str: str], inter_inst: Union[YandexSyncInterface]) -> None:
     for file_name in cloud_dict.keys():
         if file_name not in local_dict:
             inter_inst.delete(file_name)
@@ -19,7 +20,7 @@ def revise(local_dict, cloud_dict, inter_inst):
             inter_inst.reload(file_name)
 
 
-def infinite(sync_folder, inter_inst, period):
+def infinite(sync_folder: str, inter_inst: Union[YandexSyncInterface], period: int) -> None:
     while True:
         local_files_dict = monitor.scan(sync_folder)
         cloud_files_dict = inter_inst.get_info()
@@ -28,7 +29,9 @@ def infinite(sync_folder, inter_inst, period):
         sleep(period)
 
 
-def data_preparation(sync_folder, period, log_file_path, interface):
+def data_preparation(sync_folder: str, period: str, log_file_path: str, interface: Type[Union[YandexSyncInterface]]) -> Tuple[
+    str, Union[YandexSyncInterface], int
+]:
     logger.add(log_file_path, rotation='1 MB', compression='zip')
     logger.info(f'Программа начала работу. Синхронизируемая папка: {sync_folder}')
     inter_inst = interface()
@@ -37,7 +40,7 @@ def data_preparation(sync_folder, period, log_file_path, interface):
     return sync_folder, inter_inst, period
 
 @logger.catch
-def main(module):
+def main(module: str) -> None:
     if module == 'Yandex Disk':
         infinite(*data_preparation(config.YANDEX_SYNC_FOLDER,
                                    config.YANDEX_PERIOD,

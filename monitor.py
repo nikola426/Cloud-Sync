@@ -2,9 +2,10 @@ from loguru import logger
 
 import os
 import hashlib
+from typing import Dict, Union
 
 
-def calculate_md5(sync_folder, file_name):
+def calculate_md5(sync_folder: str, file_name: str) -> str:
     # Создаем объект MD5
     md5_hash = hashlib.md5()
 
@@ -22,7 +23,7 @@ def calculate_md5(sync_folder, file_name):
     return md5_hash.hexdigest()
 
 
-def scan(sync_folder):
+def scan(sync_folder: str) -> Union[Dict[str: str], None]:
     try:
         files_dict = {file_name: calculate_md5(sync_folder, file_name) for file_name in os.listdir(sync_folder)}
     except Exception as e:

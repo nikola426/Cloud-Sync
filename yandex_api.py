@@ -3,11 +3,12 @@ import requests
 
 import os
 import json
+from typing import Dict, Union
 
 from config import YANDEX_DISK_PATH
 
 
-def headers(token):
+def headers(token: str) -> Dict[str: str]:
     head = {
         'Authorization': f'OAuth {token}',
         'Content-Type': 'application/json',
@@ -16,7 +17,7 @@ def headers(token):
     return head
 
 
-def resp_filter(resp):
+def resp_filter(resp: requests.Response) -> Union[Dict[str: str], None]:
     try:
         cloud_files_data = {file_data['name']: file_data['md5'] for file_data in resp['_embedded']['items']}
     except Exception as e:
@@ -25,7 +26,7 @@ def resp_filter(resp):
         return cloud_files_data
 
 
-def scan_cloud(token):
+def scan_cloud(token: str) -> Union[Dict[str: str], None]:
     try:
         response = requests.get(f'https://cloud-api.yandex.net/v1/disk/resources?path={YANDEX_DISK_PATH}', headers=headers(token))
         deserial_response = response.json()
@@ -44,7 +45,7 @@ def scan_cloud(token):
         return resp_filter(deserial_response)
 
 
-def get_upload_link(file_name, token):
+def get_upload_link(file_name: str, token: str) -> Union[Dict[str: str], None]:
     try:
         response = requests.get(f'https://cloud-api.yandex.net/v1/disk/resources/upload?path={YANDEX_DISK_PATH}%2F{file_name}&fields=href&overwrite=true',
                                     headers=headers(token))
@@ -64,7 +65,7 @@ def get_upload_link(file_name, token):
         return deserial_response['href']
 
 
-def upload_file(sync_folder, file_name, upload_link):
+def upload_file(sync_folder: str, file_name: str, upload_link: str) -> None:
     with open(os.path.join(sync_folder, file_name), 'rb') as f:
         try:
             response = requests.put(upload_link, files={'file': f})
@@ -80,7 +81,7 @@ def upload_file(sync_folder, file_name, upload_link):
             logger.info(f'Файл {file_name} успешно отправлен.')
 
 
-def delete_files(file_name, token):
+def delete_files(file_name: str, token: str) -> None:
     try:
         response = requests.delete(f'https://cloud-api.yandex.net/v1/disk/resources?path={YANDEX_DISK_PATH}%2F{file_name}',
                                         headers=headers(token))
