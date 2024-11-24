@@ -26,7 +26,7 @@ def calculate_md5(sync_folder: str, file_name: str) -> str:
     return md5_hash.hexdigest()
 
 
-def scan(sync_folder: str) -> Union[Dict[str: str], None]:
+def scan(sync_folder: str) -> Union[Dict, None]:
     try:
         is_valid_path(sync_folder)
         files_dict = {file_name: calculate_md5(sync_folder, file_name) for file_name in os.listdir(sync_folder)}

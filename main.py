@@ -2,13 +2,13 @@ from loguru import logger
 
 from time import sleep
 from typing import Dict, Union, Type, Tuple
+from configparser import ConfigParser
 
 from interfaces import YandexSyncInterface
 import monitor
-import config
 
 
-def revise(local_dict: Dict[str: str], cloud_dict: Dict[str: str], inter_inst: Union[YandexSyncInterface]) -> None:
+def revise(local_dict: Dict, cloud_dict: Dict, inter_inst: Union[YandexSyncInterface]) -> None:
     for file_name in cloud_dict.keys():
         if file_name not in local_dict:
             inter_inst.delete(file_name)
@@ -29,22 +29,27 @@ def infinite(sync_folder: str, inter_inst: Union[YandexSyncInterface], period: i
         sleep(period)
 
 
-def data_preparation(sync_folder: str, period: str, log_file_path: str, interface: Type[Union[YandexSyncInterface]]) -> Tuple[
+def data_preparation(sync_folder: str, period: str, log_file_path: str, token: str, cloud_path: str, interface: Type[Union[YandexSyncInterface]]) -> Tuple[
     str, Union[YandexSyncInterface], int
 ]:
     logger.add(log_file_path, rotation='1 MB', compression='zip')
     logger.info(f'Программа начала работу. Синхронизируемая папка: {sync_folder}')
-    inter_inst = interface()
+    inter_inst = interface(token, cloud_path, sync_folder)
     period = int(period)
 
     return sync_folder, inter_inst, period
 
 @logger.catch
 def main(module: str) -> None:
-    if module == 'Yandex Disk':
-        infinite(*data_preparation(config.YANDEX_SYNC_FOLDER,
-                                   config.YANDEX_PERIOD,
-                                   config.YA_LOG_FILE_PATH,
+    config = ConfigParser()
+    config.read('config.ini')
+    config_module = config[module]
+    if module == 'YANDEX_DISK':
+        infinite(*data_preparation(config_module['YANDEX_SYNC_FOLDER'],
+                                   config_module['YANDEX_PERIOD'],
+                                   config_module['YA_LOG_FILE_PATH'],
+                                   config_module['YANDEX_TOKEN'],
+                                   config_module['YANDEX_DISK_PATH'],
                                    YandexSyncInterface))
 
-main('Yandex Disk')
+main('YANDEX_DISK')
