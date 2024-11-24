@@ -6,6 +6,7 @@ import json
 from typing import Dict, Union
 
 from config import YANDEX_DISK_PATH
+from is_valid import not_valid_token
 
 
 def headers(token: str) -> Dict[str: str]:
@@ -32,6 +33,8 @@ def scan_cloud(token: str) -> Union[Dict[str: str], None]:
         deserial_response = response.json()
         response.raise_for_status()
     except requests.exceptions.HTTPError:
+        if response.status_code == 401:
+            not_valid_token()
         logger.error(f'При попытке отсканировать папку в облачном хранилище сервер прислал ответ:\n'
                      f'{json.dumps(deserial_response, indent=4, ensure_ascii=False)}')
     except requests.exceptions.RequestException as e:
