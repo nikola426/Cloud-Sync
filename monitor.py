@@ -2,8 +2,11 @@ from loguru import logger
 
 import os
 import hashlib
+from sys import exit
 from typing import Dict, Union
 
+
+from is_valid import is_valid_path
 
 def calculate_md5(sync_folder: str, file_name: str) -> str:
     # Создаем объект MD5
@@ -25,9 +28,11 @@ def calculate_md5(sync_folder: str, file_name: str) -> str:
 
 def scan(sync_folder: str) -> Union[Dict[str: str], None]:
     try:
+        is_valid_path(sync_folder)
         files_dict = {file_name: calculate_md5(sync_folder, file_name) for file_name in os.listdir(sync_folder)}
     except Exception as e:
         logger.error(f'При попытке отсканировать локальную папку возникло исключение: {e}')
+        exit(0)
     else:
         logger.info('Синхронизируемая папка успешно отсканирована.')
         return files_dict
