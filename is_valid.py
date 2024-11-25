@@ -6,12 +6,14 @@ from typing import Union
 import os
 
 
+# Функция проверки валидности пути к локальной папке
 def is_valid_path(path: str) -> None:
     if not os.path.isdir(path):
         logger.error('Указанная локальная директория не существует.\nВыполнение программы завершено')
         exit(0)
 
 
+# Функция проверки валидности периода синхронизации
 def is_valid_period(period: str) -> Union[int, None]:
     try:
         period = int(period)
@@ -27,6 +29,7 @@ def is_valid_period(period: str) -> Union[int, None]:
         exit(0)
 
 
+# Функция проверки валидности пути к лог-файлу
 def is_valid_log_file_path(log_file_path: str) -> None:
     try:
         with open(log_file_path, 'a'):
@@ -46,11 +49,13 @@ def is_valid_log_file_path(log_file_path: str) -> None:
         exit(0)
 
 
+# Функция, логирующая невалидность токена доступа и завершающая программу
 def not_valid_token() -> None:
     logger.error('Отсутствует валидный токен доступа.\nВыполнение программы завершено')
     exit(0)
 
 
+# Функция, логирующая невалидность пути к удалённой папке и завершающая программу
 def not_valid_cloud_path() -> None:
     logger.error('Запрашиваемая удалённая директория не существует.\nВыполнение программы завершено')
     exit(0)
