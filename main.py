@@ -6,6 +6,7 @@ from configparser import ConfigParser
 
 from interfaces import YandexSyncInterface
 import monitor
+import is_valid
 
 
 # Функция сверки файлов локальной синхронизируемой папки и удалённой. Представляет собой сверку словарей с именами
@@ -34,10 +35,11 @@ def infinite(sync_folder: str, inter_inst: Union[YandexSyncInterface], period: i
 
 def data_preparation(sync_folder: str, period: str, log_file_path: str, token: str, cloud_path: str,
                      interface: Type[Union[YandexSyncInterface]]) -> Tuple[str, Union[YandexSyncInterface], int]:
+    is_valid.is_valid_log_file_path(log_file_path)
     logger.add(log_file_path, rotation='1 MB', compression='zip')
     logger.info(f'Программа начала работу. Синхронизируемая папка: {sync_folder}')
     inter_inst = interface(token, cloud_path, sync_folder)
-    period = int(period)
+    period = is_valid.is_valid_period(period)
 
     return sync_folder, inter_inst, period
 

@@ -5,7 +5,7 @@ import os
 import json
 from typing import Dict, Union
 
-from is_valid import not_valid_token
+import is_valid
 
 
 def headers(token: str) -> Dict:
@@ -33,7 +33,9 @@ def scan_cloud(token: str, disk_path: str) -> Union[Dict, None]:
         response.raise_for_status()
     except requests.exceptions.HTTPError:
         if response.status_code == 401:
-            not_valid_token()
+            is_valid.not_valid_token()
+        elif response.status_code == 404:
+            is_valid.not_valid_cloud_path()
         logger.error(f'При попытке отсканировать папку в облачном хранилище сервер прислал ответ:\n'
                      f'HTTP-код: {response.status_code}\n'
                      f'{json.dumps(deserial_response, indent=4, ensure_ascii=False)}')
