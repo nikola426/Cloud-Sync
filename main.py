@@ -8,6 +8,8 @@ from interfaces import YandexSyncInterface
 import monitor
 
 
+# Функция сверки файлов локальной синхронизируемой папки и удалённой. Представляет собой сверку словарей с именами
+# файлов в качестве ключей и md5-хэшей этих файлов в качестве значений.
 def revise(local_dict: Dict, cloud_dict: Dict, inter_inst: Union[YandexSyncInterface]) -> None:
     for file_name in cloud_dict.keys():
         if file_name not in local_dict:
@@ -20,6 +22,7 @@ def revise(local_dict: Dict, cloud_dict: Dict, inter_inst: Union[YandexSyncInter
             inter_inst.reload(file_name)
 
 
+# функция
 def infinite(sync_folder: str, inter_inst: Union[YandexSyncInterface], period: int) -> None:
     while True:
         local_files_dict = monitor.scan(sync_folder)
@@ -29,9 +32,8 @@ def infinite(sync_folder: str, inter_inst: Union[YandexSyncInterface], period: i
         sleep(period)
 
 
-def data_preparation(sync_folder: str, period: str, log_file_path: str, token: str, cloud_path: str, interface: Type[Union[YandexSyncInterface]]) -> Tuple[
-    str, Union[YandexSyncInterface], int
-]:
+def data_preparation(sync_folder: str, period: str, log_file_path: str, token: str, cloud_path: str,
+                     interface: Type[Union[YandexSyncInterface]]) -> Tuple[str, Union[YandexSyncInterface], int]:
     logger.add(log_file_path, rotation='1 MB', compression='zip')
     logger.info(f'Программа начала работу. Синхронизируемая папка: {sync_folder}')
     inter_inst = interface(token, cloud_path, sync_folder)
@@ -52,4 +54,5 @@ def main(module: str) -> None:
                                    config_module['YANDEX_DISK_PATH'],
                                    YandexSyncInterface))
 
-main('YANDEX_DISK')
+if __name__ == "__main__":
+    main('YANDEX_DISK')
