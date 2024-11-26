@@ -2,7 +2,6 @@ from loguru import logger
 
 from time import sleep
 from typing import Dict, Union, Type, Tuple
-from configparser import ConfigParser
 
 from interfaces import YandexSyncInterface
 import monitor
@@ -50,8 +49,8 @@ def infinite(sync_folder: str, inter_inst: Union[YandexSyncInterface], period: i
 
 
 # Функция подготовки перед началом бесконечного мониторинга
-def data_preparation(sync_folder: str, period: str, log_file_path: str, token: str, cloud_path: str,
-                     interface: Type[Union[YandexSyncInterface]]) -> Tuple[str, Union[YandexSyncInterface], int]:
+def data_preparation(interface: Type[Union[YandexSyncInterface]], sync_folder: str, period: str, log_file_path: str,
+                     token: str, cloud_path: str) -> Tuple[str, Union[YandexSyncInterface], int]:
 
     # Проверяем на валидность путь к лог-файлу. В случае невалидного пути программа завершится с соответствующим
     # сообщением
@@ -74,26 +73,28 @@ def data_preparation(sync_folder: str, period: str, log_file_path: str, token: s
     return sync_folder, inter_inst, period
 
 
-# Основная функция, предназначенная для запуска в отдельном потоке при добавлении нового сервиса
+# Основная функция, в которой происходит выбор, подготовка к запуску и, непосредственно, запуск нужного сервиса
 @logger.catch
-def main(module: str) -> None:
-    # Создаём объект парсера конфигурационного файла
-    config = ConfigParser()
-
-    # Читаем конфигурационный файл и "достаём" из объекта парсера блок входных данных нужного сервиса, имя которого
-    # передано в качестве аргумента функции
-    config.read('config.ini')
-    config_module = config[module]
+def main(service_name: str) -> None:
 
     # Запускаем нужный сервис. Передаём входные данные на предварительную подготовку в функцию data_preparation.
     # Затем функция бесконечного мониторинга infinite принимает от неё новые входные данные для начала работы.
-    if module == 'YANDEX_DISK':
-        infinite(*data_preparation(config_module['YANDEX_SYNC_FOLDER'],
-                                   config_module['YANDEX_PERIOD'],
-                                   config_module['YA_LOG_FILE_PATH'],
-                                   config_module['YANDEX_TOKEN'],
-                                   config_module['YANDEX_DISK_PATH'],
-                                   YandexSyncInterface))
+    if service_name == 'YANDEX_DISK':
+        param_names = ('YANDEX_SYNC_FOLDER',
+                       'YANDEX_PERIOD',
+                       'YA_LOG_FILE_PATH',
+                       'YANDEX_TOKEN',
+                       'YANDEX_DISK_PATH')
+
+        # Передаём адрес конфигурационного файла, имя сервиса и список имён входных параметров в функцию проверки
+        # валидности конфигурационного файла. В случае валидности файла она возвращает список значений входных
+        # параметров, иначе программа завершается с соответствующим сообщением.
+        config_data = is_valid.is_valid_config('config.ini', service_name, param_names)
+
+        # Передаём интерфейс и распакованный список данных из конфигурационного файла в функцию подготовки перед
+        # бесконечным мониторингом. Затем готовые данные из этой функции распаковываем и передаём в функцию бесконечного
+        # мониторинга
+        infinite(*data_preparation(YandexSyncInterface, *config_data))
 
 if __name__ == "__main__":
     main('YANDEX_DISK')
