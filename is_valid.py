@@ -57,7 +57,7 @@ def is_valid_config(config_file_path: str, service_name: str, param_names: Tuple
 
     # Проверяем наличие конфигурационного файла. В случае его отсутствия завершаем программу с соответствующим
     # сообщением
-    if not os.path.exists(config_file_path):
+    if not os.path.isfile(config_file_path):
         logger.error(
             f'Отсутствует конфигурационный файл {config_file_path}.\n'
             'Выполнение программы завершено')
